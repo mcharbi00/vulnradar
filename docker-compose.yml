@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vulnradar
+      POSTGRES_PASSWORD: vulnradar
+      POSTGRES_DB: vulnradar
+    volumes:
+      - vulnradar_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vulnradar"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  demo-target:
+    build: ./demo-target
+    restart: unless-stopped
+    # Volontairement pas de port publié vers l'hôte : uniquement accessible
+    # depuis le réseau interne Docker, en tant que cible d'entraînement pour le backend.
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      demo-target:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+psycopg2://vulnradar:vulnradar@db:5432/vulnradar
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      ALLOWED_SCAN_HOSTS: ${ALLOWED_SCAN_HOSTS:-demo-target,localhost,127.0.0.1}
+      CORS_ORIGINS: http://localhost:5173
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+
+volumes:
+  vulnradar_pgdata:
