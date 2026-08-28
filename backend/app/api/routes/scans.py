@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime
 from urllib.parse import urlparse
 
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, Depends, HTTPException, Response, WebSocket, WebSocketDisconnect, status
 from sqlalchemy.orm import Session
 
 from app import schemas
@@ -10,6 +10,7 @@ from app.core.config import get_settings
 from app.core.security import get_current_user
 from app.db import models
 from app.db.database import SessionLocal, get_db
+from app.report import generate_scan_pdf
 from app.scanner.engine import run_scan_async
 from app.ws_manager import manager
 
@@ -121,6 +122,30 @@ def get_scan(
     if not scan:
         raise HTTPException(status_code=404, detail="Scan introuvable")
     return scan
+
+
+@router.get("/{scan_id}/report.pdf")
+def download_report(
+    scan_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    scan = (
+        db.query(models.Scan)
+        .filter(models.Scan.id == scan_id, models.Scan.owner_id == current_user.id)
+        .first()
+    )
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan introuvable")
+
+    pdf = generate_scan_pdf(scan)
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="vulnradar-scan-{scan_id}.pdf"'
+        },
+    )
 
 
 @router.websocket("/{scan_id}/ws")

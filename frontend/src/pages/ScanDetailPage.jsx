@@ -62,6 +62,18 @@ export default function ScanDetailPage() {
     };
   }, [scanId, loadScan]);
 
+  const handleExportPdf = async () => {
+    const response = await apiClient.get(`/api/scans/${scanId}/report.pdf`, {
+      responseType: "blob",
+    });
+    const url = window.URL.createObjectURL(response.data);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `vulnradar-scan-${scanId}.pdf`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   if (!scan) {
     return <div className="mx-auto max-w-4xl px-4 py-8 text-slate-400">Chargement…</div>;
   }
@@ -88,7 +100,17 @@ export default function ScanDetailPage() {
               <p className="mt-2 text-sm text-red-400">Erreur : {scan.error}</p>
             )}
           </div>
-          <ScoreGauge score={scan.score} />
+          <div className="flex flex-col items-end gap-3">
+            <ScoreGauge score={scan.score} />
+            {scan.status === "completed" && (
+              <button
+                onClick={handleExportPdf}
+                className="rounded-md border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
+              >
+                Exporter en PDF
+              </button>
+            )}
+          </div>
         </div>
         <div className="mt-4">
           <ProgressBar progress={scan.progress} status={scan.status} />
