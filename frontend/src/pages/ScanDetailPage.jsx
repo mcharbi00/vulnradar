@@ -17,10 +17,13 @@ const CATEGORY_LABELS = {
   engine: "Moteur de scan",
 };
 
+const SEVERITIES = ["critical", "high", "medium", "low", "info"];
+
 export default function ScanDetailPage() {
   const { scanId } = useParams();
   const [scan, setScan] = useState(null);
   const [liveStep, setLiveStep] = useState(null);
+  const [severityFilter, setSeverityFilter] = useState("all");
   const wsRef = useRef(null);
 
   const loadScan = useCallback(async () => {
@@ -79,7 +82,19 @@ export default function ScanDetailPage() {
     return <div className="mx-auto max-w-4xl px-4 py-8 text-slate-400">Chargement…</div>;
   }
 
-  const grouped = scan.findings.reduce((acc, f) => {
+  // compte le nombre de findings par gravité (pour afficher sur les boutons)
+  const counts = scan.findings.reduce((acc, f) => {
+    acc[f.severity] = (acc[f.severity] || 0) + 1;
+    return acc;
+  }, {});
+
+  // n'affiche que les findings de la gravité choisie ("all" = toutes)
+  const visibleFindings =
+    severityFilter === "all"
+      ? scan.findings
+      : scan.findings.filter((f) => f.severity === severityFilter);
+
+  const grouped = visibleFindings.reduce((acc, f) => {
     acc[f.category] = acc[f.category] || [];
     acc[f.category].push(f);
     return acc;
@@ -122,6 +137,34 @@ export default function ScanDetailPage() {
         <p className="rounded-lg border border-emerald-800 bg-emerald-500/10 p-4 text-sm text-emerald-300">
           Aucune vulnérabilité détectée par les modules disponibles. 🎉
         </p>
+      )}
+
+      {scan.findings.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          <button
+            onClick={() => setSeverityFilter("all")}
+            className={`rounded-full border px-3 py-1 text-xs ${
+              severityFilter === "all"
+                ? "border-accent text-accent"
+                : "border-slate-700 text-slate-400 hover:bg-slate-800"
+            }`}
+          >
+            Toutes ({scan.findings.length})
+          </button>
+          {SEVERITIES.filter((s) => counts[s]).map((s) => (
+            <button
+              key={s}
+              onClick={() => setSeverityFilter(s)}
+              className={`rounded-full border px-3 py-1 text-xs uppercase ${
+                severityFilter === s
+                  ? "border-accent text-accent"
+                  : "border-slate-700 text-slate-400 hover:bg-slate-800"
+              }`}
+            >
+              {s} ({counts[s]})
+            </button>
+          ))}
+        </div>
       )}
 
       <div className="space-y-6">
