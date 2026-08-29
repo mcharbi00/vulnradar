@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 from starlette.concurrency import run_in_threadpool
 
-from app.scanner import cookies, dirs, discovery, headers, ports, sqli, tls, xss
+from app.scanner import cookies, dirs, discovery, headers, methods, ports, sqli, tls, xss
 
 SEVERITY_WEIGHTS = {
     "info": 0,
@@ -21,11 +21,12 @@ STEP_WEIGHTS = {
     "discovery": 5,
     "headers": 10,
     "cookies": 10,
-    "tls": 15,
-    "ports": 20,
+    "tls": 10,
+    "ports": 15,
     "xss": 15,
     "sqli": 15,
     "dirs": 10,
+    "methods": 10,
 }
 
 
@@ -95,6 +96,7 @@ def run_scan(
     step("xss", "XSS réfléchi", lambda: xss.scan_xss(url, endpoints=endpoints))
     step("sqli", "Injection SQL", lambda: sqli.scan_sqli(url, endpoints=endpoints))
     step("dirs", "Fichiers/chemins exposés", lambda: dirs.scan_dirs(url))
+    step("methods", "Méthodes HTTP", lambda: methods.scan_http_methods(url))
 
     score = compute_score(all_findings)
     return all_findings, score
@@ -152,6 +154,7 @@ async def run_scan_async(
     await step("xss", "XSS réfléchi", lambda: xss.scan_xss(url, endpoints=endpoints))
     await step("sqli", "Injection SQL", lambda: sqli.scan_sqli(url, endpoints=endpoints))
     await step("dirs", "Fichiers/chemins exposés", lambda: dirs.scan_dirs(url))
+    await step("methods", "Méthodes HTTP", lambda: methods.scan_http_methods(url))
 
     score = compute_score(all_findings)
     return all_findings, score

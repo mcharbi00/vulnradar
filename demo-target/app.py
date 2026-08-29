@@ -4,7 +4,7 @@
 import sqlite3
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 
 app = FastAPI(title="VulnRadar Demo Target (delibérément vulnérable)")
@@ -25,6 +25,15 @@ def init_db() -> None:
 
 
 init_db()
+
+
+@app.options("/")
+def options_root():
+    # déclare exprès des méthodes dangereuses (PUT, DELETE, TRACE)
+    return Response(
+        status_code=200,
+        headers={"Allow": "GET, POST, PUT, DELETE, TRACE, OPTIONS"},
+    )
 
 
 @app.get("/", response_class=HTMLResponse)

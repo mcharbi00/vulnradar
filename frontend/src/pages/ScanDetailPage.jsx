@@ -13,6 +13,7 @@ const CATEGORY_LABELS = {
   xss: "XSS réfléchi",
   sqli: "Injection SQL",
   dirs: "Fichiers exposés",
+  methods: "Méthodes HTTP",
   engine: "Moteur de scan",
 };
 
