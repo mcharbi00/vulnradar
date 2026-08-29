@@ -1,5 +1,7 @@
 # VulnRadar
 
+![CI](https://github.com/mcharbi00/vulnradar/actions/workflows/ci.yml/badge.svg)
+
 Un scanner de vulnérabilités web que j'ai construit pour me former à la sécurité applicative et à FastAPI. On lui donne une cible, il lance une série de checks (en-têtes HTTP, cookies, HTTPS, ports ouverts, XSS, injection SQL, fichiers exposés) et il renvoie un rapport avec un score et le détail des problèmes trouvés.
 
 Le projet est fourni avec une petite appli volontairement vulnérable (`demo-target`) qui sert de cible d'entraînement, donc tout peut se tester en local sans toucher à un vrai site.

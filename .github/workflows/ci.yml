@@ -1,0 +1,37 @@
+name: CI
+
+# Se déclenche à chaque push et à chaque pull request
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend-tests:
+    name: Tests backend (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Installer les dépendances
+        run: pip install -r backend/requirements.txt
+      - name: Lancer les tests
+        working-directory: backend
+        run: pytest -q
+
+  frontend-build:
+    name: Build frontend (Vite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Installer les dépendances
+        working-directory: frontend
+        run: npm install
+      - name: Construire le frontend
+        working-directory: frontend
+        run: npm run build
