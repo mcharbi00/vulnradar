@@ -5,9 +5,19 @@ import sqlite3
 from pathlib import Path
 
 from fastapi import FastAPI, Response
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 
 app = FastAPI(title="VulnRadar Demo Target (delibérément vulnérable)")
+
+# CORS mal configuré exprès : reflète n'importe quelle origine + credentials
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=".*",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 DB_PATH = Path(__file__).parent / "demo.db"
 

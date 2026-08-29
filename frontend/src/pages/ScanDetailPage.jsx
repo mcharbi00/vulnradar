@@ -14,6 +14,7 @@ const CATEGORY_LABELS = {
   sqli: "Injection SQL",
   dirs: "Fichiers exposés",
   methods: "Méthodes HTTP",
+  cors: "Configuration CORS",
   engine: "Moteur de scan",
 };
 
