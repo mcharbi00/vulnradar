@@ -3,11 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import auth, scans
 from app.core.config import get_settings
-from app.db.database import Base, engine
 
 settings = get_settings()
 
-Base.metadata.create_all(bind=engine)
+# Les tables sont créées et mises à jour par les migrations Alembic
+# (alembic upgrade head), pas au démarrage de l'application.
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

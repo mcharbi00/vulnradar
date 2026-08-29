@@ -52,6 +52,7 @@ Trois terminaux. Backend :
 cd backend
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
+alembic upgrade head        # crée / met à jour les tables
 uvicorn app.main:app --reload
 ```
 
