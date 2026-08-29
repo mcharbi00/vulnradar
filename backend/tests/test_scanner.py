@@ -2,6 +2,7 @@ from app.scanner.headers import analyze_headers
 from app.scanner.cookies import analyze_cookies
 from app.scanner.sqli import matches_error_signature
 from app.scanner.methods import analyze_allow_header
+from app.scanner.cors import analyze_cors
 from app.scanner.engine import compute_score
 
 
@@ -49,3 +50,21 @@ def test_methodes_http_risquees():
 def test_methodes_http_ok():
     # GET/POST/HEAD ne sont pas dangereuses -> aucun problème
     assert analyze_allow_header("GET, POST, HEAD") == []
+
+
+def test_cors_reflete_origine_et_credentials():
+    origin = "https://evil.example"
+    findings = analyze_cors(
+        origin,
+        {"access-control-allow-origin": origin, "access-control-allow-credentials": "true"},
+    )
+    assert len(findings) == 1
+    assert findings[0]["severity"] == "high"
+
+
+def test_cors_bien_configure():
+    # le serveur ne renvoie pas notre origine -> pas de problème
+    findings = analyze_cors(
+        "https://evil.example", {"access-control-allow-origin": "https://monsite.com"}
+    )
+    assert findings == []
