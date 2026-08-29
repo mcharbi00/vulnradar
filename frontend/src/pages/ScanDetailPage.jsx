@@ -20,6 +20,22 @@ const CATEGORY_LABELS = {
 
 const SEVERITIES = ["critical", "high", "medium", "low", "info"];
 
+const SEVERITY_LABELS = {
+  critical: "critique",
+  high: "élevée",
+  medium: "moyenne",
+  low: "faible",
+  info: "info",
+};
+
+const SEVERITY_TEXT = {
+  critical: "text-red-400",
+  high: "text-orange-400",
+  medium: "text-yellow-400",
+  low: "text-blue-400",
+  info: "text-slate-400",
+};
+
 export default function ScanDetailPage() {
   const { scanId } = useParams();
   const [scan, setScan] = useState(null);
@@ -138,6 +154,17 @@ export default function ScanDetailPage() {
         <p className="rounded-lg border border-emerald-800 bg-emerald-500/10 p-4 text-sm text-emerald-300">
           Aucune vulnérabilité détectée par les modules disponibles. 🎉
         </p>
+      )}
+
+      {scan.findings.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+          {SEVERITIES.filter((s) => counts[s]).map((s) => (
+            <span key={s} className={SEVERITY_TEXT[s]}>
+              <strong>{counts[s]}</strong> {SEVERITY_LABELS[s]}
+              {counts[s] > 1 ? "s" : ""}
+            </span>
+          ))}
+        </div>
       )}
 
       {scan.findings.length > 0 && (
