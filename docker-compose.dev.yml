@@ -1,0 +1,77 @@
+# Configuration Docker de développement : rechargement automatique.
+# Le code est monté dans les conteneurs, donc toute modif est prise en compte
+# sans reconstruire l'image.
+#
+#   backend / demo-target -> uvicorn --reload (redémarre au moindre changement .py)
+#   frontend              -> serveur de dev Vite (rafraîchit le navigateur en direct)
+#
+# Lancer avec :
+#   docker compose -f docker-compose.dev.yml up
+#
+# Note : si tu ajoutes une dépendance Python (requirements.txt), relance avec
+# --build une fois pour la réinstaller.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vulnradar
+      POSTGRES_PASSWORD: vulnradar
+      POSTGRES_DB: vulnradar
+    volumes:
+      - vulnradar_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vulnradar"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  demo-target:
+    build: ./demo-target
+    restart: unless-stopped
+    command: uvicorn app:app --host 0.0.0.0 --port 80 --reload
+    volumes:
+      - ./demo-target:/app
+    environment:
+      # force la détection des changements de fichiers dans Docker (macOS/Windows)
+      WATCHFILES_FORCE_POLLING: "true"
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      demo-target:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+psycopg2://vulnradar:vulnradar@db:5432/vulnradar
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      ALLOWED_SCAN_HOSTS: ${ALLOWED_SCAN_HOSTS:-demo-target,localhost,127.0.0.1}
+      CORS_ORIGINS: http://localhost:5173
+      WATCHFILES_FORCE_POLLING: "true"
+    ports:
+      - "8000:8000"
+
+  frontend:
+    image: node:20-slim
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: http://localhost:8000
+      # force la détection des changements (hot reload Vite dans Docker)
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "5173:5173"
+
+volumes:
+  vulnradar_pgdata:
