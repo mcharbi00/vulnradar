@@ -25,6 +25,8 @@ C'est un outil d'apprentissage. Par défaut le backend refuse toute cible qui n'
 - XSS réfléchi (via un marqueur inoffensif, sans exécuter de script)
 - Injection SQL (détectée sur les messages d'erreur SQL renvoyés)
 - Fichiers/chemins sensibles laissés accessibles (`.env`, `/admin`, etc.)
+- Méthodes HTTP dangereuses activées (`PUT`, `DELETE`, `TRACE`)
+- Configuration CORS trop permissive (origine reflétée, wildcard, credentials)
 
 Le score part de 100 et baisse selon la gravité de ce qui est trouvé. Chaque scan est stocké en base et consultable dans l'historique, avec la progression affichée en direct via WebSocket pendant l'exécution.
 
